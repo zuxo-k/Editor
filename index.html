@@ -1,473 +1,517 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>CodeEditor Pro</title>
-  <!-- Font Awesome 6 (free) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Inline CSS (iOS design system) -->
-  <style>
-    /* CSS variables – light mode default */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, system-ui, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
+    <title>CodeEditor Pro</title>
+    
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    body {
-      --bg: #ffffff;
-      --card: #f2f2f7;
-      --text: #000000;
-      --accent: #007aff;
-      --border: rgba(0,0,0,0.1);
-      --header-blur: rgba(255,255,255,0.8);
-      transition: background-color 0.3s ease, color 0.2s ease;
-      background-color: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    <style>
+        :root {
+            --bg: #ffffff;
+            --card: #f2f2f7;
+            --text: #000000;
+            --accent: #007aff;
+            --border: #e5e5ea;
+            --header-bg: rgba(255, 255, 255, 0.8);
+            --danger: #ff3b30;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
 
-    body.dark-mode {
-      --bg: #000000;
-      --card: #1c1c1e;
-      --text: #ffffff;
-      --accent: #0a84ff;
-      --border: rgba(255,255,255,0.15);
-      --header-blur: rgba(28,28,30,0.9);
-    }
+        [data-theme="dark"] {
+            --bg: #000000;
+            --card: #1c1c1e;
+            --text: #ffffff;
+            --accent: #0a84ff;
+            --border: #38383a;
+            --header-bg: rgba(0, 0, 0, 0.8);
+            --danger: #ff453a;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
 
-    /* SPLASH SCREEN */
-    #splash {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: var(--bg);
-      z-index: 2000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.3, 1);
-      pointer-events: none;
-      backdrop-filter: blur(0);
-    }
-    #splash.fade-out {
-      opacity: 0;
-    }
-    .splash-content {
-      text-align: center;
-      animation: pulse 1.5s infinite ease-in-out;
-    }
-    .splash-content h1 {
-      font-size: 2.2rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      background: linear-gradient(145deg, var(--accent), #5e5ce0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-    }
-    .splash-dots {
-      display: flex;
-      gap: 0.6rem;
-      justify-content: center;
-      margin-top: 1.5rem;
-    }
-    .splash-dots span {
-      width: 12px;
-      height: 12px;
-      background: var(--accent);
-      border-radius: 30px;
-      opacity: 0.5;
-      animation: dotPulse 1.4s infinite;
-    }
-    .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    @keyframes pulse { 0% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.8; transform: scale(1); } }
-    @keyframes dotPulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overscroll-behavior-y: none;
+        }
 
-    /* MAIN APP (hidden until splash fades) */
-    #app {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      opacity: 0;
-      animation: appFadeIn 0.5s ease forwards;
-    }
-    @keyframes appFadeIn { to { opacity: 1; } }
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
 
-    /* iOS header */
-    .app-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--header-blur);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      padding: 0.8rem 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 2px 12px rgba(0,0,0,0.03);
-    }
-    .app-header h2 {
-      font-size: 1.5rem;
-      font-weight: 590;
-      background: linear-gradient(145deg, var(--accent), #5856d6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.02em;
-    }
-    .header-actions {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-    .icon-btn {
-      background: var(--card);
-      border: none;
-      border-radius: 30px;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent);
-      font-size: 1.4rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-      -webkit-touch-callout: none;
-    }
-    .icon-btn:active {
-      transform: scale(0.94);
-      background: var(--accent);
-      color: white;
-    }
-    .icon-btn i { pointer-events: none; }
+        .splash-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
 
-    /* Editor cards */
-    .editor-container {
-      padding: 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.4rem;
-      flex: 1;
-    }
-    .editor-card {
-      background: var(--card);
-      border-radius: 22px;
-      padding: 1.2rem 1rem 0.8rem 1rem;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.02);
-      backdrop-filter: blur(5px);
-      transition: background 0.2s;
-      border: 1px solid var(--border);
-    }
-    .editor-label {
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.5rem;
-      margin-left: 0.3rem;
-    }
-    .editor-card textarea {
-      width: 100%;
-      min-height: 150px;
-      background: var(--bg);
-      border: none;
-      border-radius: 16px;
-      padding: 1rem;
-      font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      color: var(--text);
-      resize: vertical;
-      outline: 1px solid var(--border);
-      transition: outline 0.1s, background 0.2s;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
-    }
-    .editor-card textarea:focus {
-      outline: 2px solid var(--accent);
-    }
+        .loader {
+            display: flex;
+            gap: 8px;
+        }
 
-    /* Fullscreen preview modal */
-    #preview-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      z-index: 1500;
-      display: none;
-      flex-direction: column;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-      pointer-events: none;
-    }
-    #preview-modal.show {
-      display: flex;
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .preview-header {
-      padding: 0.8rem 1.2rem;
-      display: flex;
-      justify-content: flex-end;
-      background: var(--header-blur);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-    .close-preview {
-      background: var(--card);
-      border: none;
-      border-radius: 30px;
-      width: 44px;
-      height: 44px;
-      font-size: 1.5rem;
-      color: var(--accent);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .preview-iframe {
-      flex: 1;
-      width: 100%;
-      border: none;
-      background: white;
-    }
+        .loader span {
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
 
-    /* utility */
-    .hidden { display: none; }
-  </style>
+        .loader span:nth-child(1) { animation-delay: -0.3s; }
+        .loader span:nth-child(2) { animation-delay: -0.15s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 16px;
+            padding: 8px 16px;
+            transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .btn-secondary {
+            background-color: var(--card);
+            color: var(--danger);
+        }
+
+        .icon-btn {
+            background: transparent;
+            padding: 8px;
+            color: var(--text);
+            border-radius: 50%;
+        }
+        
+        .icon-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* Main Editor Area */
+        main {
+            padding: 20px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .editor-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-left: 4px;
+            opacity: 0.8;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background-color: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px;
+            font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Full Screen Preview Overlay */
+        #preview-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #preview-overlay.active {
+            transform: translateY(0);
+        }
+
+        .preview-header {
+            padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: #ffffff; /* Default white background for standard rendering */
+        }
+
+        /* SweetAlert2 iOS Tweaks */
+        .swal2-popup {
+            border-radius: 20px !important;
+            background-color: var(--card) !important;
+            color: var(--text) !important;
+        }
+        .swal2-title, .swal2-html-container {
+            color: var(--text) !important;
+        }
+        .swal2-confirm {
+            border-radius: 12px !important;
+            background-color: var(--danger) !important;
+        }
+        .swal2-cancel {
+            border-radius: 12px !important;
+            background-color: transparent !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        @media (min-width: 768px) {
+            main {
+                flex-direction: row;
+                height: calc(100vh - 80px);
+            }
+            .editor-section {
+                flex: 1;
+                height: 100%;
+            }
+            textarea {
+                height: 100%;
+                resize: none;
+            }
+        }
+    </style>
 </head>
-<body class="light-mode">
+<body>
 
-  <!-- SPLASH SCREEN -->
-  <div id="splash">
-    <div class="splash-content">
-      <h1>CodeEditor Pro</h1>
-      <div class="splash-dots">
-        <span></span><span></span><span></span>
-      </div>
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-title">CodeEditor Pro</div>
+        <div class="loader">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </div>
-  </div>
 
-  <!-- MAIN APP -->
-  <div id="app">
-    <header class="app-header">
-      <h2>CodeEditor Pro</h2>
-      <div class="header-actions">
-        <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-sun"></i></button>
-        <button class="icon-btn" id="runBtn" aria-label="Run code"><i class="fas fa-play"></i></button>
-        <button class="icon-btn" id="resetBtn" aria-label="Reset editors"><i class="fas fa-undo-alt"></i></button>
-      </div>
+    <!-- Header -->
+    <header>
+        <div class="logo">CodeEditor Pro</div>
+        <div class="header-actions">
+            <button id="theme-btn" class="icon-btn" aria-label="Toggle Theme">
+                <!-- Sun Icon -->
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+                </svg>
+                <!-- Moon Icon -->
+                <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+            <button id="reset-btn" class="btn-secondary">Reset</button>
+            <button id="run-btn" class="btn-primary">
+                <svg style="width: 16px; height: 16px; margin-right: 4px; fill: #ffffff;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                Run
+            </button>
+        </div>
     </header>
 
-    <div class="editor-container">
-      <!-- HTML Editor -->
-      <div class="editor-card">
-        <div class="editor-label">HTML</div>
-        <textarea id="htmlEditor" placeholder="<!-- HTML here -->" spellcheck="false"><h1>Hello, world!</h1></textarea>
-      </div>
-      <!-- CSS Editor -->
-      <div class="editor-card">
-        <div class="editor-label">CSS</div>
-        <textarea id="cssEditor" placeholder="/* CSS here */" spellcheck="false">h1 { color: #007aff; }</textarea>
-      </div>
-      <!-- JavaScript Editor -->
-      <div class="editor-card">
-        <div class="editor-label">JavaScript</div>
-        <textarea id="jsEditor" placeholder="// JavaScript here" spellcheck="false">console.log('ready');</textarea>
-      </div>
+    <!-- Editors -->
+    <main>
+        <div class="editor-section">
+            <span class="editor-label">HTML Editor</span>
+            <textarea id="html-code" spellcheck="false" placeholder="<!-- Write your HTML here -->"></textarea>
+        </div>
+        <div class="editor-section">
+            <span class="editor-label">CSS Editor</span>
+            <textarea id="css-code" spellcheck="false" placeholder="/* Write your CSS here */"></textarea>
+        </div>
+        <div class="editor-section">
+            <span class="editor-label">JavaScript Editor</span>
+            <textarea id="js-code" spellcheck="false" placeholder="// Write your JavaScript here"></textarea>
+        </div>
+    </main>
+
+    <!-- Preview Overlay -->
+    <div id="preview-overlay">
+        <div class="preview-header">
+            <span class="preview-title">Preview</span>
+            <button id="close-preview-btn" class="btn-secondary">Close</button>
+        </div>
+        <iframe id="preview-frame" sandbox="allow-scripts allow-modals"></iframe>
     </div>
-  </div>
 
-  <!-- FULLSCREEN PREVIEW MODAL -->
-  <div id="preview-modal">
-    <div class="preview-header">
-      <button class="close-preview" id="closePreview"><i class="fas fa-xmark"></i></button>
-    </div>
-    <iframe class="preview-iframe" id="previewFrame" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
-  </div>
+    <!-- Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- PWA Setup (Manifest & Service Worker via Blob/DataURL) ---
+            const setupPWA = () => {
+                // Generate base64 Icon
+                const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#007aff"/><text x="50" y="65" font-size="40" font-family="-apple-system, sans-serif" font-weight="bold" fill="white" text-anchor="middle">&lt;/&gt;</text></svg>`;
+                const encodedIcon = "data:image/svg+xml;base64," + btoa(svgIcon);
 
-  <!-- MANIFEST (data URL) -->
-  <link rel="manifest" id="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22CodeEditor%20Pro%22%2C%22short_name%22%3A%22Editor%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22theme_color%22%3A%22%23007aff%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22192%22%20height%3D%22192%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%23007aff%22%2F%3E%3Ctext%20x%3D%2220%22%20y%3D%2270%22%20font-size%3D%2260%22%20fill%3D%22white%22%20font-family%3D%22Arial%22%3EC%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%2C%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22512%22%20height%3D%22512%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%23007aff%22%2F%3E%3Ctext%20x%3D%2220%22%20y%3D%2270%22%20font-size%3D%2260%22%20fill%3D%22white%22%20font-family%3D%22Arial%22%3EC%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+                // Inject Manifest
+                const manifest = {
+                    name: "CodeEditor Pro",
+                    short_name: "Editor",
+                    display: "standalone",
+                    start_url: location.href,
+                    theme_color: "#007aff",
+                    background_color: "#ffffff",
+                    icons: [
+                        { src: encodedIcon, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+                        { src: encodedIcon, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+                    ]
+                };
+                const manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+                document.head.appendChild(manifestLink);
 
-  <script>
-    (function() {
-      "use strict";
+                // Inject Service Worker via Blob
+                const swCode = `
+                    self.addEventListener('install', e => self.skipWaiting());
+                    self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(
+                            fetch(e.request).catch(() => new Response("CodeEditor Pro is offline, but fully functional!"))
+                        );
+                    });
+                `;
+                try {
+                    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+                        const blob = new Blob([swCode], { type: 'application/javascript' });
+                        const swUrl = URL.createObjectURL(blob);
+                        navigator.serviceWorker.register(swUrl).catch(err => console.warn('SW Register failed:', err));
+                    }
+                } catch (e) { console.warn('PWA SW skipped in local environment.'); }
+            };
 
-      // ----- DOM elements -----
-      const splash = document.getElementById('splash');
-      const app = document.getElementById('app');
-      const themeToggle = document.getElementById('themeToggle');
-      const runBtn = document.getElementById('runBtn');
-      const resetBtn = document.getElementById('resetBtn');
-      const htmlEditor = document.getElementById('htmlEditor');
-      const cssEditor = document.getElementById('cssEditor');
-      const jsEditor = document.getElementById('jsEditor');
-      const previewModal = document.getElementById('preview-modal');
-      const previewFrame = document.getElementById('previewFrame');
-      const closePreview = document.getElementById('closePreview');
-      const themeIcon = themeToggle.querySelector('i');
+            setupPWA();
 
-      // ----- Splash screen (1500ms) -----
-      setTimeout(() => {
-        splash.classList.add('fade-out');
-        setTimeout(() => {
-          splash.style.display = 'none';
-          app.style.display = 'flex';
-        }, 800); // match fade-out duration
-      }, 1600); // 1.6s visible
+            // --- Splash Screen Logic ---
+            const splashScreen = document.getElementById('splash-screen');
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+                setTimeout(() => splashScreen.style.display = 'none', 500);
+            }, 1800);
 
-      // ----- Theme management (light/dark) -----
-      const body = document.body;
-      let isDark = localStorage.getItem('codeEditorTheme') === 'dark';
+            // --- Theme Logic ---
+            const themeBtn = document.getElementById('theme-btn');
+            const iconSun = document.getElementById('icon-sun');
+            const iconMoon = document.getElementById('icon-moon');
+            const metaTheme = document.getElementById('meta-theme-color');
+            const root = document.documentElement;
 
-      function setTheme(dark) {
-        if (dark) {
-          body.classList.add('dark-mode');
-          themeIcon.className = 'fas fa-moon';
-          localStorage.setItem('codeEditorTheme', 'dark');
-        } else {
-          body.classList.remove('dark-mode');
-          themeIcon.className = 'fas fa-sun';
-          localStorage.setItem('codeEditorTheme', 'light');
-        }
-        isDark = dark;
-      }
-      setTheme(isDark);
+            const updateThemeIcon = (theme) => {
+                if(theme === 'dark') {
+                    iconSun.style.display = 'block';
+                    iconMoon.style.display = 'none';
+                    metaTheme.setAttribute('content', '#000000');
+                } else {
+                    iconSun.style.display = 'none';
+                    iconMoon.style.display = 'block';
+                    metaTheme.setAttribute('content', '#ffffff');
+                }
+            };
 
-      themeToggle.addEventListener('click', () => {
-        setTheme(!isDark);
-      });
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            root.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
 
-      // ----- Run button: generate preview in iframe (full screen modal) -----
-      function generatePreviewHTML() {
-        const html = htmlEditor.value;
-        const css = cssEditor.value;
-        const js = jsEditor.value;
-        return `
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="UTF-8"><style>${css}</style></head>
-          <body>${html}</body>
-          <script>${js}<\/script>
-          </html>
-        `;
-      }
+            themeBtn.addEventListener('click', () => {
+                const currentTheme = root.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                root.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
 
-      runBtn.addEventListener('click', () => {
-        const srcdoc = generatePreviewHTML();
-        previewFrame.srcdoc = srcdoc;
-        previewModal.classList.add('show');
-      });
+            // --- Editor & Preview Logic ---
+            const htmlCode = document.getElementById('html-code');
+            const cssCode = document.getElementById('css-code');
+            const jsCode = document.getElementById('js-code');
+            const runBtn = document.getElementById('run-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const previewOverlay = document.getElementById('preview-overlay');
+            const closePreviewBtn = document.getElementById('close-preview-btn');
+            const previewFrame = document.getElementById('preview-frame');
 
-      closePreview.addEventListener('click', () => {
-        previewModal.classList.remove('show');
-        // clear iframe content to stop any running scripts?
-        previewFrame.srcdoc = '';
-      });
+            const generatePreview = () => {
+                const html = htmlCode.value;
+                const css = cssCode.value;
+                const js = jsCode.value;
 
-      // ----- Reset with SweetAlert2 confirmation -----
-      resetBtn.addEventListener('click', () => {
-        Swal.fire({
-          title: 'Reset editors?',
-          text: 'All your code will be lost.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#007aff',
-          cancelButtonColor: '#8e8e93',
-          confirmButtonText: 'Yes, reset',
-          background: body.classList.contains('dark-mode') ? '#1c1c1e' : '#f2f2f7',
-          color: body.classList.contains('dark-mode') ? '#fff' : '#000'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            htmlEditor.value = '';
-            cssEditor.value = '';
-            jsEditor.value = '';
-          }
+                const combined = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>${css}</style>
+                    </head>
+                    <body>
+                        ${html}
+                        <script>
+                            try {
+                                ${js}
+                            } catch(err) {
+                                console.error(err);
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                
+                previewFrame.srcdoc = combined;
+                previewOverlay.classList.add('active');
+            };
+
+            runBtn.addEventListener('click', generatePreview);
+
+            closePreviewBtn.addEventListener('click', () => {
+                previewOverlay.classList.remove('active');
+                setTimeout(() => { previewFrame.srcdoc = ''; }, 400); // Clear memory after transition
+            });
+
+            // --- Reset Logic with SweetAlert2 ---
+            resetBtn.addEventListener('click', () => {
+                Swal.fire({
+                    title: 'Reset Code?',
+                    text: "This will clear all HTML, CSS, and JavaScript. This action cannot be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Reset',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    background: getComputedStyle(root).getPropertyValue('--card').trim(),
+                    color: getComputedStyle(root).getPropertyValue('--text').trim()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        htmlCode.value = '';
+                        cssCode.value = '';
+                        jsCode.value = '';
+                    }
+                });
+            });
+
+            // Handle tabs in textareas
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(ta => {
+                ta.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = this.selectionStart;
+                        const end = this.selectionEnd;
+                        this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
+                        this.selectionStart = this.selectionEnd = start + 2;
+                    }
+                });
+            });
         });
-      });
-
-      // ----- PWA: Service Worker registration via Blob -----
-      if ('serviceWorker' in navigator) {
-        // Create service worker code as a string (simple cache-first)
-        const swCode = `
-          self.addEventListener('install', event => {
-            event.waitUntil(
-              caches.open('code-editor-v1').then(cache => {
-                return cache.addAll(['./']); // cache the current page (root)
-              })
-            );
-            self.skipWaiting();
-          });
-          self.addEventListener('activate', event => {
-            event.waitUntil(clients.claim());
-          });
-          self.addEventListener('fetch', event => {
-            event.respondWith(
-              caches.match(event.request).then(response => {
-                return response || fetch(event.request);
-              })
-            );
-          });
-        `;
-
-        try {
-          const blob = new Blob([swCode], { type: 'application/javascript' });
-          const blobUrl = URL.createObjectURL(blob);
-          navigator.serviceWorker.register(blobUrl, { scope: './' })
-            .then(reg => console.log('✅ Service Worker registered (blob)'))
-            .catch(err => console.warn('⚠️ SW registration failed (expected on file://)', err));
-        } catch (e) {
-          console.warn('SW blob registration error', e);
-        }
-      }
-
-      // ----- Additional: ensure preview modal background adapts to theme -----
-      // (no action needed, CSS variables handle it)
-
-      // ----- Ensure iframe updates theme on dark/light switch (no direct effect) -----
-
-      // ----- smooth press feedback (already in CSS .icon-btn:active) -----
-
-      // ----- localStorage already set, everything smooth -----
-
-      // ----- iOS/Android touch friendly -----
-      // All buttons have 44px height
-
-      // ----- final: set initial editors to some demo content if empty? Already set.
-
-      // On manual theme change, update swal background for next time? not necessary
-
-      // Also handle preview close with Escape key (optional)
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && previewModal.classList.contains('show')) {
-          previewModal.classList.remove('show');
-          previewFrame.srcdoc = '';
-        }
-      });
-
-    })();
-  </script>
-
-  <!-- ensure splash disappears if timeout somehow missed (backup) -->
-  <noscript>JavaScript required</noscript>
+    </script>
 </body>
 </html>
